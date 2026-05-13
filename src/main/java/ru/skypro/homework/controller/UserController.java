@@ -2,12 +2,13 @@ package ru.skypro.homework.controller;
 
 
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.user.NewPasswordDto;
+import ru.skypro.homework.dto.user.UpdateUserDto;
 import ru.skypro.homework.dto.user.UserDto;
+
 
 @RestController
 @RequestMapping("/users")
@@ -21,7 +22,18 @@ public class UserController {
 
     @PostMapping("/set_password")
     @Operation(summary = "Обновление пароля")
-    public NewPasswordDto setPassword() {
-        return new NewPasswordDto();
+    public void setPassword(@RequestBody NewPasswordDto newPasswordDto) {
     }
+
+    @PatchMapping("/me")
+    @Operation(summary = "Обновление информации об авторизованном пользователе")
+    public UpdateUserDto updateUser(@RequestBody UpdateUserDto updateUserDto) {
+        return updateUserDto;
+    }
+
+    @PatchMapping(value = "/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Обновление аватара авторизованного пользователя")
+    public void updateUserImage(@RequestParam("image") MultipartFile image) {
+    }
+
 }
