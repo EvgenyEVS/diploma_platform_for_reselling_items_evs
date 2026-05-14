@@ -5,9 +5,9 @@ import lombok.Data;
 @Data
 public class AdDto {
 
-    private Integer author;
+    private int author;
     private String image;
-    private Integer pk;
-    private Integer price;
+    private int pk;
+    private int price;
     private String title;
 }

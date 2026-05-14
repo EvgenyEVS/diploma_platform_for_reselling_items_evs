@@ -5,7 +5,7 @@ import ru.skypro.homework.dto.Role;
 
 @Data
 public class UserDto {
-    private Integer id;
+    private int id;
     private String email;
     private String firstName;
     private String lastName;
