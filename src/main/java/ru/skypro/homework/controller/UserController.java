@@ -12,6 +12,7 @@ import ru.skypro.homework.dto.user.UserDto;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
     @GetMapping("/me")
