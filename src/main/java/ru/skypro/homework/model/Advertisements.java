@@ -7,6 +7,8 @@ import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "ads")
@@ -48,5 +50,8 @@ public class Advertisements {
     @Size(min = 8, max = 64)
     @Schema(description = "описание объявления", example = "iPhone 100500")
     private String description;
+
+    @OneToMany(mappedBy = "ad", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Comment> comments = new HashSet<>();
 
 }
