@@ -26,7 +26,6 @@ public class User {
     private Integer id;
 
     @Column(name = "username", nullable = false, unique = true)
-    @Size(min = 4, max = 32)
     private String username;
 
     @Column(name = "password", nullable = false)

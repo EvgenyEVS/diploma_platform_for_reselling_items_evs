@@ -8,25 +8,31 @@ import ru.skypro.homework.dto.ads.CreateOrUpdateAdDto;
 import ru.skypro.homework.mapper.AdMapper;
 import ru.skypro.homework.model.Advertisements;
 import ru.skypro.homework.model.User;
+import ru.skypro.homework.repository.AdRepository;
+import ru.skypro.homework.service.AdService;
 
 import java.util.List;
 
 @Service
-public class AdService {
+public class AdServiceImpl implements AdService {
 
 public final AdRepository adRepository;
 public final AdMapper adMapper;
 
-    public AdService(AdRepository adRepository, AdMapper adMapper) {
+    public AdServiceImpl(AdRepository adRepository, AdMapper adMapper) {
         this.adRepository = adRepository;
         this.adMapper = adMapper;
     }
 
+
+    @Override
     public AdsDto getAllAds() {
         List<Advertisements> ads = adRepository.findAll();
         return adMapper.toAdsDto(ads);
     }
 
+
+    @Override
     public AdDto createAd (CreateOrUpdateAdDto dto, MultipartFile image, User author) {
 
         Advertisements ad = adMapper.toEntity(dto, author);

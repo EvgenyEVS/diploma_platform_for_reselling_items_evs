@@ -17,8 +17,9 @@ import ru.skypro.homework.dto.ads.AdsDto;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAdDto;
 import ru.skypro.homework.dto.ads.ExtendedAdDto;
 import ru.skypro.homework.model.User;
+import ru.skypro.homework.service.AdService;
 import ru.skypro.homework.service.UserService;
-import ru.skypro.homework.service.impl.AdService;
+
 
 @RestController
 @Tag(name = "Объявления")
@@ -40,7 +41,9 @@ public class AdvertisementsController {
                     content = @Content(schema = @Schema(implementation = AdsDto.class)))
     })
     public ResponseEntity<AdsDto> getAllAds() {
-        return ResponseEntity.ok(new AdsDto());
+
+        AdsDto adsDto = adService.getAllAds();
+        return ResponseEntity.ok(adsDto);
     }
 
 
@@ -55,8 +58,8 @@ public class AdvertisementsController {
             @RequestPart("properties") CreateOrUpdateAdDto properties,
             @RequestPart("image") MultipartFile image) {
 
-       // User author = userService.
-      //  AdDto createAd = adService.createAd(properties, image, );
+      //User author = userService.
+      //AdDto createAd = adService.createAd(properties, image, );
         return ResponseEntity.status(HttpStatus.CREATED).body(new AdDto());
     }
 
