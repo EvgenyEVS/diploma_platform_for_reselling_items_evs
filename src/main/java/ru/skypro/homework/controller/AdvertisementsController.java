@@ -16,11 +16,22 @@ import ru.skypro.homework.dto.ads.AdDto;
 import ru.skypro.homework.dto.ads.AdsDto;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAdDto;
 import ru.skypro.homework.dto.ads.ExtendedAdDto;
+import ru.skypro.homework.model.User;
+import ru.skypro.homework.service.UserService;
+import ru.skypro.homework.service.impl.AdService;
 
 @RestController
 @Tag(name = "Объявления")
 @RequestMapping("/ads")
 public class AdvertisementsController {
+
+    private final AdService adService;
+    private final UserService userService;
+
+    public AdvertisementsController(AdService adService, UserService userService) {
+        this.adService = adService;
+        this.userService = userService;
+    }
 
     @GetMapping
     @Operation(summary = "Получение всех объявлений")
@@ -32,6 +43,7 @@ public class AdvertisementsController {
         return ResponseEntity.ok(new AdsDto());
     }
 
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Добавление объявления")
     @ApiResponses({
@@ -42,8 +54,12 @@ public class AdvertisementsController {
     public ResponseEntity<AdDto> addAd(
             @RequestPart("properties") CreateOrUpdateAdDto properties,
             @RequestPart("image") MultipartFile image) {
+
+       // User author = userService.
+      //  AdDto createAd = adService.createAd(properties, image, );
         return ResponseEntity.status(HttpStatus.CREATED).body(new AdDto());
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Получение информации об объявлении")
