@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.ads.AdDto;
 import ru.skypro.homework.dto.ads.AdsDto;
 import ru.skypro.homework.dto.ads.CreateOrUpdateAdDto;
+import ru.skypro.homework.dto.ads.ExtendedAdDto;
 import ru.skypro.homework.mapper.AdMapper;
 import ru.skypro.homework.model.Advertisements;
 import ru.skypro.homework.model.User;
@@ -47,6 +48,11 @@ public final AdMapper adMapper;
     }
 
 
+    @Override
+    public ExtendedAdDto getAds(int id) {
+        Advertisements adv = adRepository.getAdvertisementsByPk(id);
+       return adMapper.toExtendedAdDto(adv);
+    }
 
 
     private String saveImage(MultipartFile image) {

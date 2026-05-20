@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.ads.AdDto;
@@ -56,11 +58,12 @@ public class AdvertisementsController {
     })
     public ResponseEntity<AdDto> addAd(
             @RequestPart("properties") CreateOrUpdateAdDto properties,
-            @RequestPart("image") MultipartFile image) {
+            @RequestPart("image") MultipartFile image,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-      //User author = userService.
-      //AdDto createAd = adService.createAd(properties, image, );
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AdDto());
+      User author = userService.findByUsername(userDetails.getUsername());
+      AdDto createAd = adService.createAd(properties, image, author);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createAd);
     }
 
 
@@ -73,8 +76,9 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     public ResponseEntity<ExtendedAdDto> getAds(@PathVariable int id) {
-        return ResponseEntity.ok(new ExtendedAdDto());
+        return ResponseEntity.ok(adService.getAds(id));
     }
+
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удаление объявления")

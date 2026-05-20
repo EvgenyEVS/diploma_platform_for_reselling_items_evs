@@ -6,4 +6,5 @@ import ru.skypro.homework.model.Advertisements;
 
 @Repository
 public interface AdRepository extends JpaRepository <Advertisements, Integer> {
+    Advertisements getAdvertisementsByPk(Integer pk);
 }
