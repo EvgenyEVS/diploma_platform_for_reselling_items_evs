@@ -76,7 +76,8 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     public ResponseEntity<ExtendedAdDto> getAds(@PathVariable int id) {
-        return ResponseEntity.ok(adService.getAds(id));
+        ExtendedAdDto ad = adService.getAds(id);
+        return ResponseEntity.ok(ad);
     }
 
 
@@ -88,7 +89,10 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Not found")
     })
-    public ResponseEntity<Void> removeAd(@PathVariable int id) {
+    public ResponseEntity<Void> removeAd(@PathVariable int id,
+                                         @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        adService.deleteAd(id, currentUser);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
@@ -102,8 +106,11 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     public ResponseEntity<AdDto> updateAds(@PathVariable int id,
-                                           @RequestBody CreateOrUpdateAdDto dto) {
-        return ResponseEntity.ok(new AdDto());
+                                           @RequestBody CreateOrUpdateAdDto dto,
+                                           @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        AdDto updatedAd = adService.updateAd(id, dto, currentUser);
+        return ResponseEntity.ok(updatedAd);
     }
 
     @GetMapping("/me")
@@ -113,8 +120,10 @@ public class AdvertisementsController {
                     content = @Content(schema = @Schema(implementation = AdsDto.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public ResponseEntity<AdsDto> getAdsMe() {
-        return ResponseEntity.ok(new AdsDto());
+    public ResponseEntity<AdsDto> getAdsMe(@AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        AdsDto myAds = adService.getMyAds(currentUser);
+        return ResponseEntity.ok(myAds);
     }
 
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -127,7 +136,10 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     public ResponseEntity<byte[]> updateImage(@PathVariable int id,
-                                              @RequestParam("image") MultipartFile image) {
+                                              @RequestParam("image") MultipartFile image,
+                                              @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.findByUsername(userDetails.getUsername());
+        String imagePath = adService.updateAdImage(id, image, currentUser);
         return ResponseEntity.ok(new byte[0]);
     }
 }
