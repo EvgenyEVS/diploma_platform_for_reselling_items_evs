@@ -69,7 +69,7 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
 
     @Override
-    public UserDto updateUser(String username, UpdateUserDto updateUserDto) {
+    public UpdateUserDto updateUser(String username, UpdateUserDto updateUserDto) {
         log.debug("Updating user for: {}", username);
 
         User user = findByUsername(username);
@@ -88,7 +88,7 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
         User updateUser = userRepository.save(user);
         log.info("User info updated successfully for: {}", username);
-        return userMapper.toUserDto(updateUser);
+        return userMapper.toUpdateUserDto(updateUser);
     }
 
 

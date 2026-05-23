@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(target = "comments", ignore = true)
     User toEntity(Register register);
 
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "password", ignore = true)
@@ -28,5 +29,8 @@ public interface UserMapper {
     @Mapping(target = "ads", ignore = true)
     @Mapping(target = "comments", ignore = true)
     void updateUserFromDto(UpdateUserDto dto, @MappingTarget User user);
+
+
+    UpdateUserDto toUpdateUserDto(User user);
 
 }

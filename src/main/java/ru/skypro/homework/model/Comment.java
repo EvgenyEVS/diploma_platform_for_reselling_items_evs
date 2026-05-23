@@ -40,6 +40,7 @@ public class Comment {
     @JoinColumn(name = "ad_id", nullable = false)
     private Advertisements ad;
 
+    @PrePersist
     protected void onCreate(){
         createdAt = System.currentTimeMillis();
     }
