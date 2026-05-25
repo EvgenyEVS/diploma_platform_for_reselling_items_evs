@@ -116,7 +116,7 @@ public class AdServiceImpl implements AdService {
 
 
     @Override
-    public String updateAdImage(int id, MultipartFile image, User currentUser) {
+    public byte[] updateAdImage(int id, MultipartFile image, User currentUser) {
         log.debug("Updating image for ad with id: {} by user: {}", id, currentUser.getUsername());
 
         Advertisements ad = getAdById(id);
@@ -131,7 +131,17 @@ public class AdServiceImpl implements AdService {
         adRepository.save(ad);
 
         log.info("Updated image for ad with id: {}", id);
-        return imagePath;
+        return getImageBytes(imagePath);
+    }
+
+
+    @Override
+    public byte[] getAdImage(int id) {
+        Advertisements ad = getAdById(id);
+        if (ad.getImage() == null || ad.getImage().isEmpty()) {
+            return new byte[0];
+        }
+        return getImageBytes(ad.getImage());
     }
 
 
@@ -193,6 +203,19 @@ public class AdServiceImpl implements AdService {
         } catch (IOException e) {
             log.warn("Failed to delete image file: {}", imagePath, e);
         }
+    }
+
+    private byte[] getImageBytes(String imagePath) {
+        try {
+            Path path = Paths.get(imagePath.startsWith("/") ? imagePath.substring(1) : imagePath);
+            if (Files.exists(path)) {
+                return Files.readAllBytes(path);
+            }
+        } catch (IOException e) {
+            log.error("Failed to read image file: {}", imagePath, e);
+            throw new RuntimeException("Failed to read image", e);
+        }
+        return new byte[0];
     }
 
 }

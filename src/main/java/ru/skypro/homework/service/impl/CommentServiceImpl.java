@@ -1,6 +1,8 @@
 package ru.skypro.homework.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.comments.CommentDto;
@@ -11,11 +13,14 @@ import ru.skypro.homework.model.Advertisements;
 import ru.skypro.homework.model.Comment;
 import ru.skypro.homework.model.User;
 import ru.skypro.homework.repository.AdRepository;
+import ru.skypro.homework.repository.CommentRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.CommentService;
 
 import java.util.List;
 
+@Service
+@Slf4j
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -51,17 +56,17 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto addComment(int adId, CreateOrUpdateCommentDto dto, String username) {
         log.debug("Adding comment to ad: {} by user: {}", adId, username);
 
-        // Получаем объявление
+
         Advertisements ad = adRepository.findById(adId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Ad not found with id: " + adId));
 
-        // Получаем автора комментария
+
         User author = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found: " + username));
 
-        // Создаем комментарий
+
         Comment comment = commentMapper.toEntity(dto, author, ad);
         comment.setCreatedAt(System.currentTimeMillis());
 
@@ -76,18 +81,15 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(int adId, int commentId, String username) {
         log.debug("Deleting comment: {} from ad: {} by user: {}", commentId, adId, username);
 
-        // Проверяем существование комментария
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Comment not found with id: " + commentId));
 
-        // Проверяем, что комментарий принадлежит указанному объявлению
         if (comment.getAd().getPk() != adId) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Comment with id: " + commentId + " does not belong to ad with id: " + adId);
         }
 
-        // Проверяем права доступа
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found: " + username));
@@ -109,18 +111,15 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto updateComment(int adId, int commentId, CreateOrUpdateCommentDto dto, String username) {
         log.debug("Updating comment: {} from ad: {} by user: {}", commentId, adId, username);
 
-        // Получаем комментарий
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Comment not found with id: " + commentId));
 
-        // Проверяем, что комментарий принадлежит указанному объявлению
         if (comment.getAd().getPk() != adId) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Comment with id: " + commentId + " does not belong to ad with id: " + adId);
         }
 
-        // Проверяем права доступа (только автор может редактировать)
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found: " + username));
@@ -132,7 +131,6 @@ public class CommentServiceImpl implements CommentService {
                     "Only the author can update the comment");
         }
 
-        // Обновляем текст комментария
         commentMapper.updateCommentFromDto(dto, comment);
 
         Comment updatedComment = commentRepository.save(comment);

@@ -24,5 +24,7 @@ public interface AdService {
 
     AdsDto getMyAds(User currentUser);
 
-    String updateAdImage(int id, MultipartFile image, User currentUser);
+    byte[] updateAdImage(int id, MultipartFile image, User currentUser);
+
+    byte[] getAdImage(int id);
 }

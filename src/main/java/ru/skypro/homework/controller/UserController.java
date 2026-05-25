@@ -80,9 +80,27 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
-    public ResponseEntity<Void> updateUserImage(@RequestParam("image") MultipartFile image,
+    public ResponseEntity<Void> updateUserImage(@RequestPart("image") MultipartFile image,
                                                 @AuthenticationPrincipal UserDetails userDetails) {
         userService.updateUserImage(userDetails.getUsername(), image);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/me/image", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+    @Operation(summary = "Получение аватара пользователя")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "Not found")
+    })
+    public ResponseEntity<byte[]> getUserImage(@AuthenticationPrincipal UserDetails userDetails) {
+        byte[] imageBytes = userService.getUserImage(userDetails.getUsername());
+
+        if (imageBytes.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(imageBytes);
     }
 }

@@ -22,6 +22,8 @@ import ru.skypro.homework.model.User;
 import ru.skypro.homework.service.AdService;
 import ru.skypro.homework.service.UserService;
 
+import javax.validation.Valid;
+
 
 @RestController
 @Tag(name = "Объявления")
@@ -57,7 +59,7 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<AdDto> addAd(
-            @RequestPart("properties") CreateOrUpdateAdDto properties,
+            @Valid @RequestPart("properties") CreateOrUpdateAdDto properties,
             @RequestPart("image") MultipartFile image,
             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -106,7 +108,7 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     public ResponseEntity<AdDto> updateAds(@PathVariable int id,
-                                           @RequestBody CreateOrUpdateAdDto dto,
+                                           @Valid @RequestBody CreateOrUpdateAdDto dto,
                                            @AuthenticationPrincipal UserDetails userDetails) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
         AdDto updatedAd = adService.updateAd(id, dto, currentUser);
@@ -136,10 +138,32 @@ public class AdvertisementsController {
             @ApiResponse(responseCode = "404", description = "Not found")
     })
     public ResponseEntity<byte[]> updateImage(@PathVariable int id,
-                                              @RequestParam("image") MultipartFile image,
+                                              @RequestPart("image") MultipartFile image,
                                               @AuthenticationPrincipal UserDetails userDetails) {
         User currentUser = userService.findByUsername(userDetails.getUsername());
-        String imagePath = adService.updateAdImage(id, image, currentUser);
-        return ResponseEntity.ok(new byte[0]);
+        byte[] imageBytes = adService.updateAdImage(id, image, currentUser);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(imageBytes);
+    }
+
+
+    @GetMapping(value = "/{id}/image", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+    @Operation(summary = "Получение картинки объявления")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "Not found")
+    })
+    public ResponseEntity<byte[]> getAdImage(@PathVariable int id) {
+        byte[] imageBytes = adService.getAdImage(id);
+
+        if (imageBytes.length == 0) {
+            return ResponseEntity.notFound().build();
+        }
+
+        MediaType mediaType = MediaType.IMAGE_JPEG;
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .body(imageBytes);
     }
 }
