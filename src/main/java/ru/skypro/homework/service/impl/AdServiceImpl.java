@@ -2,6 +2,7 @@ package ru.skypro.homework.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -82,11 +83,11 @@ public class AdServiceImpl implements AdService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN') or @adServiceImpl.isAdAuthor(#id, authentication.name)")
     public void deleteAd(int id, User currentUser) {
         log.debug("Deleting ad with id: {} by user: {}", id, currentUser.getUsername());
 
         Advertisements ad = getAdById(id);
-        checkAuthorization(ad, currentUser);
 
         if (ad.getImage() != null && !ad.getImage().isEmpty()) {
             deleteImageFile(ad.getImage());
@@ -98,11 +99,11 @@ public class AdServiceImpl implements AdService {
 
 
     @Override
+    @PreAuthorize("hasRole('ADMIN') or @adServiceImpl.isAdAuthor(#id, authentication.name)")
     public AdDto updateAd(int id, CreateOrUpdateAdDto dto, User currentUser) {
         log.debug("Updating ad with id: {} by user: {}", id, currentUser.getUsername());
 
         Advertisements ad = getAdById(id);
-        checkAuthorization(ad, currentUser);
 
         adMapper.updateAdFromDto(dto, ad);
         Advertisements updated = adRepository.save(ad);
@@ -122,18 +123,18 @@ public class AdServiceImpl implements AdService {
 
 
     @Override
-    public byte[] updateAdImage(int id, MultipartFile image, User currentUser) {
+    @PreAuthorize("hasRole('ADMIN') or @adServiceImpl.isAdAuthor(#id, authentication.name)")
+    public byte[] updateAdImage(int id, MultipartFile image, User currentUser) {  // параметр сохранен
         log.debug("Updating image for ad with id: {} by user: {}", id, currentUser.getUsername());
 
         Advertisements ad = getAdById(id);
-        checkAuthorization(ad, currentUser);
 
         if (ad.getImage() != null && !ad.getImage().isEmpty()) {
             deleteImageFile(ad.getImage());
         }
 
         try {
-            String imagePath = saveImage(image, id); // ✅ Исправлено: передаем id
+            String imagePath = saveImage(image, id);
             ad.setImage(imagePath);
             adRepository.save(ad);
 
@@ -164,25 +165,13 @@ public class AdServiceImpl implements AdService {
     }
 
 
-    private void checkAuthorization(Advertisements ad, User currentUser) {
-        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
-        boolean isAuthor = ad.getAuthor().getId().equals(currentUser.getId());
-
-        if (!isAdmin && !isAuthor) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the author of this ad");
-        }
-    }
-
-
     private String saveImage(MultipartFile image, int adId) throws IOException {
-        String fileName = "ad_" + adId + ".jpg";
-        Path filePath = Paths.get("uploads/images/ads/", fileName);
-
+        String fileName = adId + ".jpg";
         Path uploadPath = Paths.get(UPLOAD_DIR);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
-
+        Path filePath = uploadPath.resolve(fileName);
         Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         return fileName;
     }
@@ -213,5 +202,13 @@ public class AdServiceImpl implements AdService {
             log.warn("Failed to delete image file: {}", imagePath, e);
         }
     }
+
+    @SuppressWarnings("unused")
+    public boolean isAdAuthor(int adId, String username) {
+        return adRepository.findById(adId)
+                .map(ad -> ad.getAuthor().getUsername().equals(username))
+                .orElse(false);
+    }
+
 
 }

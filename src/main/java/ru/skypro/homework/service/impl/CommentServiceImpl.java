@@ -2,6 +2,7 @@ package ru.skypro.homework.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -42,7 +43,6 @@ public class CommentServiceImpl implements CommentService {
     public CommentsDto getCommentsByAdId(int adId) {
         log.debug("Getting comments for ad with id: {}", adId);
 
-        // Проверяем существование объявления
         if (!adRepository.existsById(adId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ad not found with id: " + adId);
         }
@@ -78,6 +78,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or @commentServiceImpl.isCommentAuthor(#commentId, authentication.name)")
     public void deleteComment(int adId, int commentId, String username) {
         log.debug("Deleting comment: {} from ad: {} by user: {}", commentId, adId, username);
 
@@ -90,24 +91,13 @@ public class CommentServiceImpl implements CommentService {
                     "Comment with id: " + commentId + " does not belong to ad with id: " + adId);
         }
 
-        User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "User not found: " + username));
-
-        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
-        boolean isAuthor = comment.getAuthor().getId().equals(currentUser.getId());
-
-        if (!isAdmin && !isAuthor) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "You don't have permission to delete this comment");
-        }
-
         commentRepository.delete(comment);
         log.info("Deleted comment with id: {}", commentId);
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('ADMIN') or @commentServiceImpl.isCommentAuthor(#commentId, authentication.name)")
     public CommentDto updateComment(int adId, int commentId, CreateOrUpdateCommentDto dto, String username) {
         log.debug("Updating comment: {} from ad: {} by user: {}", commentId, adId, username);
 
@@ -120,17 +110,6 @@ public class CommentServiceImpl implements CommentService {
                     "Comment with id: " + commentId + " does not belong to ad with id: " + adId);
         }
 
-        User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "User not found: " + username));
-
-        boolean isAuthor = comment.getAuthor().getId().equals(currentUser.getId());
-
-        if (!isAuthor) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only the author can update the comment");
-        }
-
         commentMapper.updateCommentFromDto(dto, comment);
 
         Comment updatedComment = commentRepository.save(comment);
@@ -138,4 +117,13 @@ public class CommentServiceImpl implements CommentService {
 
         return commentMapper.toCommentDto(updatedComment);
     }
+
+    @SuppressWarnings("unused")
+    public boolean isCommentAuthor(int commentId, String username) {
+        return commentRepository.findById(commentId)
+                .map(comment -> comment.getAuthor().getUsername().equals(username))
+                .orElse(false);
+    }
+
 }
+

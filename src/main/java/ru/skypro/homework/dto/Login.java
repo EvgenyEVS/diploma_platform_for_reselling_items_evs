@@ -9,9 +9,11 @@ import javax.validation.constraints.Size;
 @Schema(description = "Данные для авторизации пользователя")
 public class Login {
 
+    @Schema(description = "логин пользователя", minLength = 4, maxLength = 32, example = "user@example.com")
     @Size(min = 4, max = 32)
     private String username;
 
+    @Schema(description = "пароль пользователя", minLength = 8, maxLength = 16, example = "password123")
     @Size(min = 8, max = 16)
     private String password;
 }

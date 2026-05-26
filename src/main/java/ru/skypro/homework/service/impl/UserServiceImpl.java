@@ -2,6 +2,7 @@ package ru.skypro.homework.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,6 +56,7 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
 
     @Override
+    @PreAuthorize("#username == authentication.name")
     public void updateUserPassword(String username, NewPasswordDto newPasswordDto) {
         User user = findByUsername(username);
         if (!passwordEncoder.matches(newPasswordDto.getCurrentPassword(), user.getPassword())) {
@@ -69,6 +71,7 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
 
     @Override
+    @PreAuthorize("#username == authentication.name")
     public UpdateUserDto updateUser(String username, UpdateUserDto updateUserDto) {
         log.debug("Updating user for: {}", username);
 
@@ -93,6 +96,7 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
 
     @Override
+    @PreAuthorize("#username == authentication.name")
     public String updateUserImage(String username, MultipartFile image) {
         log.debug("Updating avatar for user: {}", username);
 
@@ -117,21 +121,25 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
         User user = findByUsername(username);
         if (user.getImage() == null || user.getImage().isEmpty()) {
+            log.debug("User {} has no avatar", username);
             return new byte[0];
         }
 
+        Path path = Paths.get(UPLOAD_DIR, user.getImage());
+
         try {
-            Path path = Paths.get(user.getImage().startsWith("/") ?
-                    user.getImage().substring(1) : user.getImage());
             if (Files.exists(path)) {
-                return Files.readAllBytes(path);
+                byte[] imageBytes = Files.readAllBytes(path);
+                log.debug("Successfully loaded avatar for user: {}, size: {} bytes", username, imageBytes.length);
+                return imageBytes;
+            } else {
+                log.warn("Avatar file not found for user: {}, path: {}", username, path);
+                return new byte[0];
             }
-
         } catch (IOException e) {
-            log.warn("Failed to read avatar for user: {}", username);
+            log.error("Failed to read avatar for user: {}", username, e);
+            return new byte[0];
         }
-
-        return new byte[0];
     }
 
 
@@ -152,7 +160,9 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
             String fileName = UUID.randomUUID().toString() + extensions;
             Path filePath = uploadPath.resolve(fileName);
             Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            return "/" + UPLOAD_DIR + fileName;
+
+            log.debug("Saved image for user: {}", fileName);
+            return fileName;
 
         } catch (IOException e) {
             log.error("Failed to save image", e);
@@ -163,7 +173,7 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
 
     private void deleteImage(String imagePath) {
         try {
-            Path path = Paths.get(imagePath.startsWith("/") ? imagePath.substring(1) : imagePath);
+            Path path = Paths.get(UPLOAD_DIR, imagePath);
             if (Files.exists(path)) {
                 Files.delete(path);
                 log.debug("Deleted image file: {}", imagePath);

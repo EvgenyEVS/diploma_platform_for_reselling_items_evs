@@ -2,7 +2,6 @@ package ru.skypro.homework.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -35,18 +34,9 @@ public class WebSecurityConfig {
             "/images/**"
     };
 
-    private static final String[] IMAGE_ENDPOINTS = {
-            "/images/avatars/**",
-            "/images/ads/**"
-    };
-
-    private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-    // Внедряем оба бина
-    public WebSecurityConfig(@Lazy UserDetailsService userDetailsService,
-                             PasswordEncoder passwordEncoder) {
-        this.userDetailsService = userDetailsService;
+    public WebSecurityConfig(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -55,18 +45,16 @@ public class WebSecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .userDetailsService(userDetailsService)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .antMatchers(AUTH_WHITELIST).permitAll()
-                        .antMatchers(HttpMethod.GET, IMAGE_ENDPOINTS).permitAll()
                         .antMatchers(HttpMethod.GET, "/ads").permitAll()
                         .antMatchers(HttpMethod.GET, "/ads/*").permitAll()
                         .antMatchers(HttpMethod.GET, "/ads/*/comments").permitAll()
                         .antMatchers("/ads/**").authenticated()
                         .antMatchers("/users/**").authenticated()
-                        .antMatchers("/users/role/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .httpBasic(httpBasic -> httpBasic
@@ -77,7 +65,8 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+    public AuthenticationManager authenticationManager(HttpSecurity http,
+                                                       UserDetailsService userDetailsService) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder)
