@@ -1,13 +1,19 @@
 package ru.skypro.homework.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.Register;
 import ru.skypro.homework.dto.Role;
+import ru.skypro.homework.exception.UsernameAlreadyExistsException;
+import ru.skypro.homework.mapper.UserMapper;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AuthService;
 import ru.skypro.homework.model.User;
@@ -18,11 +24,13 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
+    private final UserMapper userMapper;
 
     public AuthServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.encoder = passwordEncoder;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -47,33 +55,29 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
     }
 
     @Override
+    @Transactional
     public boolean register(Register register) {
         log.debug("Registration attempt for user: {}", register.getUsername());
 
+
         if (userRepository.findByUsername(register.getUsername()).isPresent()) {
-            log.warn("Registration failed - user already exists: {}", register.getUsername());
-            return false;
+            throw new UsernameAlreadyExistsException(register.getUsername());
         }
 
-        User user = new User();
-        user.setUsername(register.getUsername());
+        User user = userMapper.toEntity(register);
         user.setPassword(encoder.encode(register.getPassword()));
-        user.setFirstName(register.getFirstName());
-        user.setLastName(register.getLastName());
-        user.setPhone(register.getPhone());
         user.setRole(register.getRole() != null ? register.getRole() : Role.USER);
-        user.setImage(null);
 
         try {
             userRepository.save(user);
             log.info("Successfully registered user: {}", register.getUsername());
             return true;
-        } catch (Exception e) {
-            log.error("Registration failed for user: {}", register.getUsername());
-            return false;
+
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Race condition: username {} was taken between check and save",
+                    register.getUsername());
+            throw new UsernameAlreadyExistsException(register.getUsername());
         }
-
-
     }
 
     @Override

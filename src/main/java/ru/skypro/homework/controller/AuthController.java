@@ -15,6 +15,8 @@ import ru.skypro.homework.dto.Login;
 import ru.skypro.homework.dto.Register;
 import ru.skypro.homework.service.AuthService;
 
+import javax.validation.Valid;
+
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
 @RestController
@@ -43,11 +45,9 @@ public class AuthController {
             @ApiResponse(responseCode = "201", description = "Created"),
             @ApiResponse(responseCode = "400", description = "Bad Request")
     })
-    public ResponseEntity<?> register(@RequestBody Register register) {
-        if (authService.register(register)) {
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    public ResponseEntity<?> register(@RequestBody @Valid Register register) {
+        authService.register(register);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
 }

@@ -53,14 +53,14 @@ public interface AdMapper {
     default void setImageUrl(@MappingTarget AdDto adDto, Advertisements ad) {
         if (ad.getImage() != null && !ad.getImage().isEmpty()) {
 
-            adDto.setImage("/ads/" + ad.getPk() + "/image");
+            adDto.setImage("/images/ads/" + ad.getPk());
         }
     }
 
     @AfterMapping
     default void setImageUrl(@MappingTarget ExtendedAdDto extendedAdDto, Advertisements ad) {
         if (ad.getImage() != null && !ad.getImage().isEmpty()) {
-            extendedAdDto.setImage("/ads/" + ad.getPk() + "/image");
+            extendedAdDto.setImage("/images/ads/" + ad.getPk());
         }
     }
 
