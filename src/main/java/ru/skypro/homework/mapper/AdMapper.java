@@ -1,5 +1,6 @@
 package ru.skypro.homework.mapper;
 
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -46,5 +47,21 @@ public interface AdMapper {
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "comments", ignore = true)
     void updateAdFromDto(CreateOrUpdateAdDto dto, @MappingTarget Advertisements ad);
+
+
+    @AfterMapping
+    default void setImageUrl(@MappingTarget AdDto adDto, Advertisements ad) {
+        if (ad.getImage() != null && !ad.getImage().isEmpty()) {
+
+            adDto.setImage("/ads/" + ad.getPk() + "/image");
+        }
+    }
+
+    @AfterMapping
+    default void setImageUrl(@MappingTarget ExtendedAdDto extendedAdDto, Advertisements ad) {
+        if (ad.getImage() != null && !ad.getImage().isEmpty()) {
+            extendedAdDto.setImage("/ads/" + ad.getPk() + "/image");
+        }
+    }
 
 }

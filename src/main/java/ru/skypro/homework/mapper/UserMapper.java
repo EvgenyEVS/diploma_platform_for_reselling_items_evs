@@ -1,5 +1,6 @@
 package ru.skypro.homework.mapper;
 
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -33,4 +34,11 @@ public interface UserMapper {
 
     UpdateUserDto toUpdateUserDto(User user);
 
+
+    @AfterMapping
+    default void setImageUrl(@MappingTarget UserDto userDto, User user) {
+        if (user.getImage() != null && !user.getImage().isEmpty()) {
+            userDto.setImage("/images/avatars/" + user.getUsername());
+        }
+    }
 }

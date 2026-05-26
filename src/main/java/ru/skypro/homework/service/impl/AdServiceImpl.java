@@ -48,16 +48,24 @@ public class AdServiceImpl implements AdService {
 
     @Override
     public AdDto createAd(CreateOrUpdateAdDto dto, MultipartFile image, User author) {
-        log.debug("Creating new ad for user: {}", author.getUsername());
 
         Advertisements ad = adMapper.toEntity(dto, author);
+        ad.setImage(null);
+        Advertisements saved = adRepository.save(ad);
+
 
         if (image != null && !image.isEmpty()) {
-            String imagePath = saveImage(image);
-            ad.setImage(imagePath);
+            try {
+                String imagePath = saveImage(image, saved.getPk());
+                saved.setImage(imagePath);
+                saved = adRepository.save(saved);
+            } catch (IOException e) {
+                log.error("Failed to save image for ad: {}", saved.getPk(), e);
+                adRepository.delete(saved);
+                throw new RuntimeException("Failed to save ad image", e);
+            }
         }
 
-        Advertisements saved = adRepository.save(ad);
         log.info("Created ad with id: {}", saved.getPk());
         return adMapper.toAdDto(saved);
     }
@@ -68,7 +76,7 @@ public class AdServiceImpl implements AdService {
         log.debug("Getting ad with id: {}", id);
 
         Advertisements adv = adRepository.findById(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Ad not found with id: " + id));
         return adMapper.toExtendedAdDto(adv);
     }
@@ -104,7 +112,6 @@ public class AdServiceImpl implements AdService {
     }
 
 
-
     @Override
     public AdsDto getMyAds(User currentUser) {
         log.debug("Getting ads for user: {}", currentUser.getUsername());
@@ -112,7 +119,6 @@ public class AdServiceImpl implements AdService {
         List<Advertisements> ads = adRepository.findByAuthorId(currentUser.getId());
         return adMapper.toAdsDto(ads);
     }
-
 
 
     @Override
@@ -126,12 +132,17 @@ public class AdServiceImpl implements AdService {
             deleteImageFile(ad.getImage());
         }
 
-        String imagePath = saveImage(image);
-        ad.setImage(imagePath);
-        adRepository.save(ad);
+        try {
+            String imagePath = saveImage(image, id); // ✅ Исправлено: передаем id
+            ad.setImage(imagePath);
+            adRepository.save(ad);
 
-        log.info("Updated image for ad with id: {}", id);
-        return getImageBytes(imagePath);
+            log.info("Updated image for ad with id: {}", id);
+            return getImageBytes(imagePath);
+        } catch (IOException e) {
+            log.error("Failed to update image for ad: {}", id, e);
+            throw new RuntimeException("Failed to update ad image", e);
+        }
     }
 
 
@@ -143,7 +154,6 @@ public class AdServiceImpl implements AdService {
         }
         return getImageBytes(ad.getImage());
     }
-
 
 
     //private methods
@@ -164,58 +174,44 @@ public class AdServiceImpl implements AdService {
     }
 
 
-    private String saveImage(MultipartFile image) {
+    private String saveImage(MultipartFile image, int adId) throws IOException {
+        String fileName = "ad_" + adId + ".jpg";
+        Path filePath = Paths.get("uploads/images/ads/", fileName);
 
-        try {
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-
-            String originalFileName = image.getOriginalFilename();
-            String extensions = "";
-            if (originalFileName != null && originalFileName.contains(".")) {
-                extensions = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
-
-            String fileName = UUID.randomUUID().toString() + extensions;
-            Path filePath = uploadPath.resolve(fileName);
-            Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            return "/" + UPLOAD_DIR + fileName;
-
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save image", e);
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
         }
+
+        Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        return fileName;
     }
 
-
-    private void deleteImageFile(String imagePath) {
-        try {
-            Path path = Paths.get(imagePath.startsWith("/") ? imagePath.substring(1) : imagePath);
-            if (Files.exists(path)) {
-                Files.delete(path);
-            }
-            log.debug("Deleted image file: {}", imagePath);
-
-        } catch (IOException e) {
-            log.warn("Failed to delete image file: {}", imagePath, e);
-        }
-    }
 
     private byte[] getImageBytes(String imagePath) {
         try {
-            Path path = Paths.get(imagePath.startsWith("/") ? imagePath.substring(1) : imagePath);
+
+            Path path = Paths.get(UPLOAD_DIR + imagePath);
             if (Files.exists(path)) {
                 return Files.readAllBytes(path);
             }
+            log.warn("Image file not found: {}", path);
         } catch (IOException e) {
             log.error("Failed to read image file: {}", imagePath, e);
-            throw new RuntimeException("Failed to read image", e);
         }
         return new byte[0];
+    }
+
+    private void deleteImageFile(String imagePath) {
+        try {
+            Path path = Paths.get(UPLOAD_DIR + imagePath);
+            if (Files.exists(path)) {
+                Files.delete(path);
+                log.debug("Deleted image file: {}", imagePath);
+            }
+        } catch (IOException e) {
+            log.warn("Failed to delete image file: {}", imagePath, e);
+        }
     }
 
 }
