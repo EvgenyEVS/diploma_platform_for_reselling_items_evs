@@ -19,23 +19,23 @@ public class ImageController {
         this.userService = userService;
     }
 
-
-    @GetMapping(value = "/images/ads/{id}", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
+    @GetMapping(value = "/images/ads/{id}",
+            produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_GIF_VALUE})
     public ResponseEntity<byte[]> getAdImage(@PathVariable int id) {
         byte[] image = adService.getAdImage(id);
-        if (image.length == 0) {
+        if (image == null || image.length == 0) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(image);
+        return ResponseEntity.ok().body(image);
     }
 
-
-    @GetMapping(value = "/images/avatars/{username}", produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE})
-    public ResponseEntity<byte[]> getUserImage(@PathVariable String username) {
-        byte[] image = userService.getUserImage(username);
-        if (image.length == 0) {
+    @GetMapping(value = "/images/avatars/{fileName}",
+            produces = {MediaType.IMAGE_PNG_VALUE, MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_GIF_VALUE})
+    public ResponseEntity<byte[]> getUserImage(@PathVariable String fileName) {
+        byte[] image = userService.getUserImageByFileName(fileName);
+        if (image == null || image.length == 0) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(image);
+        return ResponseEntity.ok().body(image);
     }
 }

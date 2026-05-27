@@ -19,4 +19,6 @@ public interface UserService {
     String updateUserImage (String username, MultipartFile image);
 
     byte[] getUserImage(String username);
+
+    byte[] getUserImageByFileName(String fileName);
 }

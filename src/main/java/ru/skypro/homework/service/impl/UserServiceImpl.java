@@ -140,6 +140,30 @@ public class UserServiceImpl implements ru.skypro.homework.service.UserService {
             log.error("Failed to read avatar for user: {}", username, e);
             return new byte[0];
         }
+
+
+
+    }
+
+    @Override
+    public byte[] getUserImageByFileName(String fileName) {
+        log.debug("Getting avatar by file name: {}", fileName);
+
+        Path path = Paths.get(UPLOAD_DIR, fileName);
+
+        try {
+            if (Files.exists(path)) {
+                byte[] imageBytes = Files.readAllBytes(path);
+                log.debug("Successfully loaded avatar, size: {} bytes", imageBytes.length);
+                return imageBytes;
+            } else {
+                log.warn("Avatar file not found: {}", path);
+                return new byte[0];
+            }
+        } catch (IOException e) {
+            log.error("Failed to read avatar file: {}", fileName, e);
+            return new byte[0];
+        }
     }
 
 

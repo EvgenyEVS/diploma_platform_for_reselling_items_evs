@@ -38,7 +38,7 @@ public interface UserMapper {
     @AfterMapping
     default void setImageUrl(@MappingTarget UserDto userDto, User user) {
         if (user.getImage() != null && !user.getImage().isEmpty()) {
-            userDto.setImage("/images/avatars/" + user.getUsername());
+            userDto.setImage("/images/avatars/" + user.getImage());
         }
     }
 }

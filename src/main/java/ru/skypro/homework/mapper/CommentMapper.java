@@ -1,5 +1,19 @@
 package ru.skypro.homework.mapper;
 
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import ru.skypro.homework.dto.comments.CommentDto;
+import ru.skypro.homework.dto.comments.CommentsDto;
+import ru.skypro.homework.dto.comments.CreateOrUpdateCommentDto;
+import ru.skypro.homework.model.Advertisements;
+import ru.skypro.homework.model.Comment;
+import ru.skypro.homework.model.User;
+
+import java.util.List;
+
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -16,7 +30,6 @@ import java.util.List;
 public interface CommentMapper {
 
     @Mapping(source = "author.id", target = "author")
-    @Mapping(source = "author.image", target = "authorImage")
     @Mapping(source = "author.firstName", target = "authorFirstName")
     @Mapping(source = "pk", target = "pk")
     @Mapping(source = "createdAt", target = "createdAt")
@@ -43,4 +56,13 @@ public interface CommentMapper {
     @Mapping(target = "createdAt", ignore = true)
     void updateCommentFromDto(CreateOrUpdateCommentDto dto, @MappingTarget Comment comment);
 
+    @AfterMapping
+    default void setAuthorImageUrl(@MappingTarget CommentDto commentDto, Comment comment) {
+        User author = comment.getAuthor();
+        if (author != null && author.getImage() != null && !author.getImage().isEmpty()) {
+            commentDto.setAuthorImage("/images/avatars/" + author.getImage());
+        } else {
+            commentDto.setAuthorImage(null);
+        }
+    }
 }
