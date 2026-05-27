@@ -113,20 +113,24 @@ java -jar target/ads-0.0.1-SNAPSHOT.jar
 bash
 docker run -p 3000:3000 --rm ghcr.io/dmitry-bizin/front-react-avito:v1.21
 Фронтенд будет доступен по адресу: http://localhost:3000
+```
 
-⚙️ Конфигурация
+## ⚙️ Конфигурация
 Основные настройки
 Параметр	Значение по умолчанию	Описание
+```
 server.port	8080	Порт сервера
 spring.datasource.url	jdbc:postgresql://localhost:5432/relising_items_db	URL БД
 spring.jpa.hibernate.ddl-auto	none	Стратегия создания схемы
 spring.servlet.multipart.max-file-size	10MB	Максимальный размер файла
 CORS настройки
 Фронтенд работает на http://localhost:3000, CORS настроен в WebSecurityConfig.
+```
 
-📚 API Документация
+### 📚 API Документация
 После запуска приложения документация Swagger доступна по адресу:
 
+```
 text
 http://localhost:8080/swagger-ui.html
 Основные эндпоинты
@@ -145,47 +149,10 @@ PATCH	/ads/{id}	Обновление объявления	USER/ADMIN
 GET	/ads/{id}/comments	Комментарии	Все
 POST	/ads/{id}/comments	Добавить комментарий	USER/ADMIN
 DELETE	/ads/{id}/comments/{commentId}	Удалить комментарий	USER/ADMIN
-Примеры запросов
-Регистрация
+```
 
-bash
-POST http://localhost:8080/register
-Content-Type: application/json
-
-{
-  "username": "user@example.com",
-  "password": "password123",
-  "firstName": "John",
-  "lastName": "Doe",
-  "phone": "+7 123 456-78-90",
-  "role": "USER"
-}
-Авторизация (Basic Auth)
-
-text
-GET http://localhost:8080/users/me
-Authorization: Basic dXNlckBleGFtcGxlLmNvbTpwYXNzd29yZDEyMw==
-Создание объявления
-
-bash
-POST http://localhost:8080/ads
-Authorization: Basic dXNlckBleGFtcGxlLmNvbTpwYXNzd29yZDEyMw==
-Content-Type: multipart/form-data
-
-properties: {"title":"iPhone 13","price":50000,"description":"Отличное состояние"}
-image: [файл]
-Добавление комментария
-
-bash
-POST http://localhost:8080/ads/1/comments
-Authorization: Basic dXNlckBleGFtcGxlLmNvbTpwYXNzd29yZDEyMw==
-Content-Type: application/json
-
-{
-  "text": "Отличное объявление!"
-}
-📁 Структура проекта
-text
+## 📁 Структура проекта
+```text
 src/
 ├── main/
 │   ├── java/ru/skypro/homework/
@@ -210,8 +177,11 @@ src/
 └── test/                    # Тесты
     ├── controller/          # Интеграционные тесты
     └── service/impl/        # Unit-тесты
-💾 База данных
+```
+
+## 💾 База данных
 Схема БД
+```
 sql
 -- Таблица пользователей
 users (
@@ -243,7 +213,8 @@ comments (
     text       VARCHAR(64) NOT NULL,
     created_at BIGINT NOT NULL
 )
-Миграции (Liquibase)
+```
+### Миграции (Liquibase)
 Проект использует Liquibase для управления схемой БД. Миграции находятся в src/main/resources/db/changelog/:
 
 v1/ - Создание таблиц
