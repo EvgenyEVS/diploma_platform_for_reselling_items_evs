@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- Версия 1: Создание таблиц -->
+    <include file="/db/changelog/v1/v1-001-create-users-table.sql"/>
+    <include file="db/changelog/v1/v1-002-create-ads-table.sql"/>
+    <include file="db/changelog/v1/v1-003-create-comments-table.sql"/>
+
+    <!-- Версия 2: Добавление индексов для производительности -->
+    <include file="db/changelog/v2/v2-001-add-indexes.sql"/>
+
+    <!-- Версия 3: Добавление ограничений -->
+    <include file="db/changelog/v3/v3-001-add-constraints.sql"/>
+
+</databaseChangeLog>
