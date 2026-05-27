@@ -31,7 +31,6 @@ public class User {
     private String username;
 
     @Column(name = "password", nullable = false)
-    @Size(min = 8, max = 16)
     private String password;
 
     @Column(name = "first_name", nullable = false)
